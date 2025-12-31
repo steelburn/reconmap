@@ -71,20 +71,6 @@ services:
       keycloak:
         condition: service_healthy
 
-  api:
-    container_name: rmap-api
-    image: ghcr.io/reconmap/rest-api:latest
-    restart: unless-stopped
-    volumes:
-      - "./config-api.json:/var/www/webapp/config.json"
-      - "./logs:/var/www/webapp/logs/"
-      - "./data:/var/www/webapp/data/"
-    ports:
-      - "5510:5510"
-    depends_on:
-        mysql:
-            condition: service_healthy
-
   ngapi:
     container_name: rmap-ngapi
     image: ghcr.io/reconmap/ng-api:latest
@@ -92,15 +78,19 @@ services:
       context: ./
       dockerfile: docker/Dockerfile
     volumes:
-      - "./config-ngapi.json:/App/appsettings.json"
+      - "./config-ngapi.json:/app/appsettings.json"
       - dataprotection-keys:/root/.aspnet/DataProtection-Keys
     ports:
       - "5253:5253"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://0.0.0.0:5253
+    depends_on:
+        mysql:
+            condition: service_healthy
 
   agent:
+    profiles: ['agent']
     container_name: rmap-agent
     image: ghcr.io/reconmap/agent:latest
     restart: unless-stopped
